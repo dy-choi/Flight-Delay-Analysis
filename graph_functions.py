@@ -1,32 +1,23 @@
 """
-Helper functions.
+Helper functions for creating a Bayesian Network
 
 @author: dychoi
 """
 
 import pandas as pd
 import statsmodels.api as sm
-import time
 import networkx as nx
 import matplotlib.pyplot as plt
 
-def filterRoutes(df):
-    '''
-    filter df to contain delayed fligths from SFO to PHL routes only.
-    '''
-    df = df[(df['ORIGIN'] == 'SFO') & (df['DEST'] == 'PHL') & (df['ARR_DELAY'] > 0)]
-    df = df.reset_index()
-    return df.drop(['index','YEAR','ORIGIN','DEST', 'UNIQUE_CARRIER','DEP_TIME','DEP_TIME_BLK','DEP_DELAY_GROUP', 'DEP_DELAY_NEW', 'DEP_DEL15','WHEELS_OFF','WHEELS_ON','ARR_DELAY','ARR_DELAY_NEW','Unnamed: 29'],axis=1)
 
-def dateColumns(df):
+def regression_model(df, from_li, to_node):
     '''
-    Given a column with mm/dd/yyyy, create a MONTH and DAY column.
+    return OLS regression model, given list from_li of nodes and singular to_node
     '''
-    dates = [str(d).replace('/','') for d in list(df['Date'])]
-    dates = [time.strptime(d,'%m%d%Y') for d in dates]
-    df['MONTH'] = [d.tm_mon for d in dates]
-    df['DAY'] = [d.tm_mday for d in dates]
-
+    X = df[from_li]
+    y = df[to_node]
+    model = sm.OLS(y, X).fit()
+    return model
 
 def update_flights_edges_df(from_li, str_var, flight_edges_df):
     '''
@@ -67,16 +58,6 @@ def draw_graph(df,name):
     nx.draw_networkx_edges(G, pos, edgelist=G_edges, edge_color='b',style='dot', arrows=True,arrow_size = 15,alpha=0.5)
     plt.savefig('./images/'+ name)
     plt.show()
-    
-def regression_model(from_li, to_node, train_df):
-    '''
-    return OLS regression model, given list from_li of nodes and singular to_node
-    '''
-    X = train_df[from_li]
-    y = train_df[to_node]
-    model = sm.OLS(y, X).fit()
-    return model
-
     
 def remove_edge(from_edge,to_edge,df):
     '''

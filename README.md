@@ -1,4 +1,4 @@
-# Flight-Delay-Analysis
+# Flight Delay Analysis: SFO to PHL
 Master's Independent Study at the University of Pennsylvania (Spring 2018)
 
 Flight delay is a costly problem to consumers, airlines, and industrial experts. Delays provoke complaints from passengers, create high costs to airlines, and result in difficulties for airport operations. It is therefore important for the Federal Aviation Administration (FAA) to understand the causes of delay as a means to reduce the total cost that delays can cause.
