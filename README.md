@@ -25,7 +25,7 @@ This section reads in all the data and cleaning it up to keep just hte necessary
 
 We use the Geph software to create a visualization of the directed acylic graph (DAG). The output is **flights_delay_visualization.png**.
 
-## 3. Computing Conditional Probaility Tables
+## 3. Computing Conditional Probability Tables
 
 Here, we are computing the conditional probabilities relevant to each node. To do this, we first define helper functions in **cpt_calculator.py** which are called in **BayesianNetworkAnalysis.ipynb**.
 
