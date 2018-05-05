@@ -1,0 +1,21 @@
+digraph Tree {
+node [shape=box, style="filled, rounded", color="black", fontname=helvetica] ;
+edge [fontname=helvetica] ;
+0 [label=<NAS_DELAY &le; 0.5<br/>gini = 0.498<br/>samples = 774<br/>value = [364, 410]<br/>class = Arrival Delay>, fillcolor="#399de51d"] ;
+1 [label=<CARRIER_DELAY &le; 0.5<br/>gini = 0.385<br/>samples = 492<br/>value = [364, 128]<br/>class = No Arrival Delay>, fillcolor="#e58139a5"] ;
+0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"] ;
+2 [label=<LATE_AIRCRAFT_DELAY &le; 0.5<br/>gini = 0.156<br/>samples = 398<br/>value = [364, 34]<br/>class = No Arrival Delay>, fillcolor="#e58139e7"] ;
+1 -> 2 ;
+3 [label=<WEATHER_DELAY &le; 0.5<br/>gini = 0.005<br/>samples = 365<br/>value = [364, 1]<br/>class = No Arrival Delay>, fillcolor="#e58139fe"] ;
+2 -> 3 ;
+4 [label=<gini = 0.0<br/>samples = 364<br/>value = [364, 0]<br/>class = No Arrival Delay>, fillcolor="#e58139ff"] ;
+3 -> 4 ;
+5 [label=<gini = 0.0<br/>samples = 1<br/>value = [0, 1]<br/>class = Arrival Delay>, fillcolor="#399de5ff"] ;
+3 -> 5 ;
+6 [label=<gini = 0.0<br/>samples = 33<br/>value = [0, 33]<br/>class = Arrival Delay>, fillcolor="#399de5ff"] ;
+2 -> 6 ;
+7 [label=<gini = 0.0<br/>samples = 94<br/>value = [0, 94]<br/>class = Arrival Delay>, fillcolor="#399de5ff"] ;
+1 -> 7 ;
+8 [label=<gini = 0.0<br/>samples = 282<br/>value = [0, 282]<br/>class = Arrival Delay>, fillcolor="#399de5ff"] ;
+0 -> 8 [labeldistance=2.5, labelangle=-45, headlabel="False"] ;
+}
