@@ -5,10 +5,11 @@ Helper functions for computing CPTs.
 """
 import pandas as pd
 import numpy as np
+from operator import mul
 
 
 # read in training data, edge data, and initialize NUM_DELAYS
-data_df = pd.read_csv('./train_data.csv')
+data_df = pd.read_csv('./train_data.csv').astype('int',copy=False)
 edges_df = pd.read_csv('./edges.csv')
 nodes_with_parents = list(set(edges_df.Target))
 nodes_no_parents = list(set(edges_df.Source) - set(edges_df.Target))
@@ -19,12 +20,19 @@ visited_set = set()
 NUM_DELAYS = data_df.shape[0]
 
 # make dictionary of nodes and their parents
+# make dictionary of number of posisble values for each node
 node_parents = dict()
-nodes_with_parents
+node_values = dict()
 for node in nodes_with_parents:
     node_parents[node] = set(edges_df.Source[edges_df.Target == node])
+    node_values[node] = max(data_df[node])
 for node in nodes_no_parents:
     node_parents[node] = set()
+    node_values[node] = max(data_df[node])
+# adjust node_values
+for node in node_values:
+    if (node != 'MONTH') & (node != 'DAY_OF_WEEK'):
+        node_values[node] += 1
     
 ###################################### FUNCTIONS ######################################
 
@@ -69,4 +77,8 @@ def nonparentless_CPT(node):
     df = df.drop(['num','num_sum'],axis=1)
     visited_set.add(node)
     nodes_set.remove(node)
+    # calculate number of expected rows
+    num_rows = np.prod([node_values[parent] for parent in [node for node in node_parents[node]]]) * node_values[node]
+    print('There are', df.shape[0], 'rows in the above table, but we should have', num_rows, \
+      ', which means that', num_rows - df.shape[0], 'row(s) are missing.')
     return df
