@@ -75,6 +75,7 @@ def parentless_CPT(col):
     df.reset_index(level=0, inplace=True)
     df['prob'] = df.num / NUM_DELAYS
     df['log_p'] = np.log(df.prob)
+    df = df.drop(['num'],axis=1)
 
     # update node sets
     visited_set.add(col)
