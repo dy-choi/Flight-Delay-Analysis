@@ -20,19 +20,31 @@ visited_set = set()
 NUM_DELAYS = data_df.shape[0]
 
 # make dictionary of nodes and their parents
-# make dictionary of number of posisble values for each node
 node_parents = dict()
-node_values = dict()
 for node in nodes_with_parents:
     node_parents[node] = set(edges_df.Source[edges_df.Target == node])
-    node_values[node] = max(data_df[node])
 for node in nodes_no_parents:
     node_parents[node] = set()
-    node_values[node] = max(data_df[node])
-# adjust node_values
-for node in node_values:
-    if (node != 'MONTH') & (node != 'DAY_OF_WEEK'):
-        node_values[node] += 1
+
+# make dictionary of number of posisble values for each node
+node_values = {
+'TAXI_OUT': [i for i in range(7)],
+ 'ScheduledDepartureSFO': [i for i in range(5)],
+ 'CRS_DEP_TIME':[0, 1],
+ 'ARR_DEL15':[0, 1],
+ 'CARRIER_DELAY':[0, 1],
+ 'WEATHER_DELAY':[0, 1],
+ 'DelayedDepartureSFO':[0, 1],
+ 'LATE_AIRCRAFT_DELAY':[0, 1],
+ 'DEP_DELAY':[0, 1, -1],
+ 'DelayedArrivalPHL':[0, 1],
+ 'TAXI_IN':[i for i in range(13)],
+ 'ScheduledArrivalPHL':[i for i in range(5)],
+ 'CRS_ARR_TIME':[0, 1],
+ 'NAS_DELAY':[0, 1],
+ 'MONTH': [i for i in range(1,13)],
+ 'DAY_OF_WEEK': [i for i in range(1,8)]
+}
     
 ###################################### FUNCTIONS ######################################
 
@@ -49,11 +61,9 @@ def available_nodes():
     '''
     return list of available nodes to visit
     '''
-    li = []
-    for node in nodes_set:
-        if node_parents[node].issubset(visited_set):
-            li += [node]
+    li = [node for node in nodes_set if node_parents[node].issubset(visited_set)]
     return li
+
 
 def parentless_CPT(col):
     '''
@@ -64,21 +74,52 @@ def parentless_CPT(col):
     df.reset_index(level=0, inplace=True)
     df['prob'] = df.num / NUM_DELAYS
     df['log_p'] = np.log(df.prob)
+
+    # update node sets
     visited_set.add(col)
     nodes_set.remove(col)
     return df
 
 def nonparentless_CPT(node):
+    # compute CPT
     df = data_df.groupby(list(node_parents[node]) + [node]).size().reset_index().rename(columns={0:'num'})
     temp_df = df.groupby(list(node_parents[node]))['num'].sum().to_frame().rename(columns={'num': 'num_sum'}).reset_index()
     df = df.merge(temp_df, left_on=list(node_parents[node]),right_on=list(node_parents[node]))
     df['prob'] = df.num / df.num_sum
     df['log_p'] = np.log(df.prob)
     df = df.drop(['num','num_sum'],axis=1)
+    
+    # update node sets
     visited_set.add(node)
     nodes_set.remove(node)
+    
     # calculate number of expected rows
-    num_rows = np.prod([node_values[parent] for parent in [node for node in node_parents[node]]]) * node_values[node]
-    print('There are', df.shape[0], 'rows in the above table, but we should have', num_rows, \
-      ', which means that', num_rows - df.shape[0], 'row(s) are missing.')
+    num_rows = np.prod([len(node_values[parent]) for parent in [node for node in node_parents[node]]]) * len(node_values[node])
+    num_missing = num_rows - df.shape[0]
+    if num_missing > 0:
+        print('Note: There are', df.shape[0], 'rows in the above table, but we should have', num_rows, \
+              ', which means that', num_missing, 'row(s) are missing.')
     return df
+
+
+
+# def nonparentless_CPT(node):
+#     # compute CPT
+#     df = data_df.groupby(list(node_parents[node]) + [node]).size().reset_index().rename(columns={0:'num'})
+#     temp_df = df.groupby(list(node_parents[node]))['num'].sum().to_frame().rename(columns={'num': 'num_sum'}).reset_index()
+#     df = df.merge(temp_df, left_on=list(node_parents[node]),right_on=list(node_parents[node]))
+#     df['prob'] = df.num / df.num_sum
+#     df['log_p'] = np.log(df.prob)
+#     df = df.drop(['num','num_sum'],axis=1)
+    
+#     # update node sets
+#     visited_set.add(node)
+#     nodes_set.remove(node)
+    
+#     # calculate number of expected rows
+#     num_rows = np.prod([node_values[parent] for parent in [node for node in node_parents[node]]]) * node_values[node]
+#     num_missing = num_rows - df.shape[0]
+#     if num_missing > 0:
+#         print('Note: There are', df.shape[0], 'rows in the above table, but we should have', num_rows, \
+#               ', which means that', num_missing, 'row(s) are missing.')
+#     return df
