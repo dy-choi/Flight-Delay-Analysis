@@ -7,6 +7,9 @@ import pandas as pd
 import numpy as np
 from operator import mul
 
+# constant
+TINY = np.finfo(float).tiny
+
 
 # read in training data, edge data, and initialize NUM_DELAYS
 data_df = pd.read_csv('./train_data.csv').astype('int',copy=False)
@@ -67,7 +70,7 @@ def available_nodes():
 
 def parentless_CPT(col):
     '''
-    Find probability tables of nodes which do not have parents.
+    Compute probability tables of nodes which do not have parents.
     '''
     df = data_df.groupby(col).size().to_frame()
     df.columns = ['num']
@@ -81,6 +84,9 @@ def parentless_CPT(col):
     return df
 
 def nonparentless_CPT(node):
+    '''
+    Compute probability tables of nodes that have parents.
+    '''
     # compute CPT
     df = data_df.groupby(list(node_parents[node]) + [node]).size().reset_index().rename(columns={0:'num'})
     temp_df = df.groupby(list(node_parents[node]))['num'].sum().to_frame().rename(columns={'num': 'num_sum'}).reset_index()
@@ -98,28 +104,25 @@ def nonparentless_CPT(node):
     num_missing = num_rows - df.shape[0]
     if num_missing > 0:
         print('Note: There are', df.shape[0], 'rows in the above table, but we should have', num_rows, \
-              ', which means that', num_missing, 'row(s) are missing.')
+              ', which means that', num_missing, 'row(s) missing values have been replaced with to occur with probability',\
+              TINY, '.')
+        df = fill_missing(node, df)
     return df
 
-
-
-# def nonparentless_CPT(node):
-#     # compute CPT
-#     df = data_df.groupby(list(node_parents[node]) + [node]).size().reset_index().rename(columns={0:'num'})
-#     temp_df = df.groupby(list(node_parents[node]))['num'].sum().to_frame().rename(columns={'num': 'num_sum'}).reset_index()
-#     df = df.merge(temp_df, left_on=list(node_parents[node]),right_on=list(node_parents[node]))
-#     df['prob'] = df.num / df.num_sum
-#     df['log_p'] = np.log(df.prob)
-#     df = df.drop(['num','num_sum'],axis=1)
+def fill_missing(node, df):
+    '''
+    Complete the CPT (df) by adding in values that are missing observations.
+    '''
+    # make a complete CPT
+    temp = [node_values[p] for p in node_parents[node]] + [node_values[node]]
+    temp = np.stack(np.meshgrid(*temp), -1).reshape(-1, len(temp))
+    temp = pd.DataFrame(temp,columns=df.columns.tolist()[:-2])
     
-#     # update node sets
-#     visited_set.add(node)
-#     nodes_set.remove(node)
-    
-#     # calculate number of expected rows
-#     num_rows = np.prod([node_values[parent] for parent in [node for node in node_parents[node]]]) * node_values[node]
-#     num_missing = num_rows - df.shape[0]
-#     if num_missing > 0:
-#         print('Note: There are', df.shape[0], 'rows in the above table, but we should have', num_rows, \
-#               ', which means that', num_missing, 'row(s) are missing.')
-#     return df
+    # merge with original df
+    on_li = df.columns.tolist()[:-2]
+    df = temp.merge(df, on=on_li, how='outer')
+
+    # replace NaN values with very small values
+    df['prob'].fillna(TINY, inplace=True)
+    df['log_p'].fillna(np.log(TINY), inplace=True)
+    return df
