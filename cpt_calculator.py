@@ -64,9 +64,7 @@ def available_nodes():
     '''
     return list of available nodes to visit
     '''
-    li = [node for node in nodes_set if node_parents[node].issubset(visited_set)]
-    return li
-
+    return [node for node in nodes_set if node_parents[node].issubset(visited_set)]
 
 def parentless_CPT(col):
     '''
